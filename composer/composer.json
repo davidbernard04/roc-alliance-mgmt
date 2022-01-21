@@ -1,0 +1,7 @@
+{
+    "require": {
+        "thiagoalessio/tesseract_ocr": "^2.12",
+        "joserick/png-metadata": "^0.2.7",
+        "twig/twig": "^3.0"
+    }
+}

@@ -1,0 +1,30 @@
+{% extends 'index.html.twig' %}
+
+{% block content %}
+
+    {% include 'upload_form.twig' %}
+    
+    <table class="table">
+        <tr>
+        {% for day in days|keys %}
+            <th>{{day|date('M d Y')}}</th>
+        {% endfor %}
+        </tr>
+        <tr>
+        {% for day in days %}
+            <td>
+            {% for member in day %}
+                {% if member.diff is null %}
+                    <font color="green">{{member.name}}: {{member.pts}}</font><br>
+                {% elseif member.diff == 0 %}
+                    <font color="red">{{member.name}}: {{member.pts}} (+0)</font><br>
+                {% else %}
+                    {{member.name}}: {{member.pts}} (+{{member.diff}})<br>
+                {% endif %}
+            {% endfor %}
+            </td>
+        {% endfor %}
+        </tr>
+    </table>
+
+{% endblock content %}
