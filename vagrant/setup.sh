@@ -17,12 +17,8 @@ apt-get -y install php-cli php-mbstring
 
 # Install composer
 echo "Installing composer..."
-curl -sS https://getcomposer.org/installer -o /tmp/composer-setup.php && php /tmp/composer-setup.php --install-dir=/usr/local/bin --filename=composer; rm /tmp/composer-setup.php
-
-# Install dependencies with composer
-pushd $PROJECT_PATH/composer
-composer install
-popd
+curl -sS https://getcomposer.org/installer -o /tmp/composer-setup.php && php /tmp/composer-setup.php --install-dir=/usr/local/bin --filename=composer
+rm /tmp/composer-setup.php
 
 # TODO
 # php.ini max upload size (2 MB by default)

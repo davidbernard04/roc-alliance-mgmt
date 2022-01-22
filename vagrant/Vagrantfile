@@ -51,6 +51,12 @@ Vagrant.configure("2") do |config|
     systemctl restart apache2
   END
 
+  # Install dependencies with composer (without being root)
+  config.vm.provision "shell", privileged: false, args: MOUNTED_VM_PATH, inline: <<-END
+    cd $1/composer
+    composer install 2>&1
+  END
+
   config.vm.post_up_message = <<-END
   ---------------------------------------------------------------
    Web app available at: http://127.0.0.1:8080
