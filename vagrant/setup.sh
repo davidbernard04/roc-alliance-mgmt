@@ -11,13 +11,18 @@ apt-get update
 # Tesseract
 apt-get -y install tesseract-ocr
 # My web app
-apt-get -y install vim git unzip curl apache2 php php-sqlite3 php-gd
+apt-get -y install vim git unzip curl apache2 php php-sqlite3 php-gd php-xml php-curl
 # Not sure if needed anymore
-apt-get -y install php-cli php-mbstring 
+apt-get -y install php-cli php-mbstring
 
 # Install composer
 echo "Installing composer..."
 curl -sS https://getcomposer.org/installer -o /tmp/composer-setup.php && php /tmp/composer-setup.php --install-dir=/usr/local/bin --filename=composer; rm /tmp/composer-setup.php
+
+# Install dependencies with composer
+pushd $PROJECT_PATH/composer
+composer install
+popd
 
 # TODO
 # php.ini max upload size (2 MB by default)
@@ -36,7 +41,7 @@ a2enmod vhost_alias
 CONFIG_NAME=`basename $PROJECT_PATH`
 
 # Write virtual host
-cat << END >/etc/apache2/sites-available/$CONFIG_NAME
+cat << END >/etc/apache2/sites-available/$CONFIG_NAME.conf
 <VirtualHost *:80>
     DocumentRoot "$PROJECT_PATH/src"
 
@@ -50,7 +55,7 @@ END
 
 # Replace default site
 a2dissite 000-default.conf 
-a2ensite $CONFIG_NAME
+a2ensite $CONFIG_NAME.conf
 
 # Apply config
 systemctl restart apache2.service
