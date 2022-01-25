@@ -1,0 +1,66 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# Synced folder inside the VM
+LOCAL_PC_PATH = ".."
+MOUNTED_VM_PATH = "/var/www/roc-alliance-mgmt"
+
+Vagrant.configure("2") do |config|
+
+  config.vm.box = "geerlingguy/ubuntu2004"
+
+  config.vm.hostname = "ubuntu-vagrant"
+
+  # Forward some DGW network .
+  config.vm.network "forwarded_port", guest: 80,   host: 8080, host_ip: "0.0.0.0" #WEB
+
+  # Prevent vagrant asking everytime by specifying the interface on you PC, for example:
+  config.vm.network "public_network", bridge: "en0: Wi-Fi (AirPort)"
+
+  # This mounts LOCAL_PC_PATH directly from local files on your PC. 
+  config.vm.synced_folder LOCAL_PC_PATH, MOUNTED_VM_PATH
+
+  config.vm.provider "virtualbox" do |vb|
+    # Display the VirtualBox GUI when booting the machine (useful for troubleshooting).
+    #vb.gui = true
+    vb.memory = "768"
+
+    # Disable Audio and USB in VirtualBox (may prevent having to install add-ons on your PC).
+    vb.customize ["modifyvm", :id, "--audio", "none"]
+    vb.customize ["modifyvm", :id, "--usb", "off"]
+  end
+
+  # Set timezone
+  config.vm.provision "shell", inline: <<-END
+    sudo rm /etc/localtime && sudo ln -s /usr/share/zoneinfo/America/Toronto /etc/localtime
+  END
+
+  # Faster SSH login during boot time. See https://unix.stackexchange.com/questions/487742/system-is-booting-up-unprivileged-users-are-not-permitted-to-log-in-yet
+  config.vm.provision "shell", inline: <<-END
+    echo "Commenting out nologin authentication..."
+    sed -i 's/^.*pam_nologin.so$/#\0/' /etc/pam.d/login
+  END
+
+  # Setup Apache
+  config.vm.provision "shell", path: "setup.sh", args: MOUNTED_VM_PATH
+
+  # Easier web development with everything under vagrant user
+  config.vm.provision "shell", inline: <<-END
+    sed -i 's/APACHE_RUN_USER=.*/APACHE_RUN_USER=vagrant/g' /etc/apache2/envvars
+    sed -i 's/APACHE_RUN_GROUP=.*/APACHE_RUN_GROUP=vagrant/g' /etc/apache2/envvars
+    systemctl restart apache2
+  END
+
+  # Install dependencies with composer (without being root)
+  config.vm.provision "shell", privileged: false, args: MOUNTED_VM_PATH, inline: <<-END
+    cd $1/composer
+    composer install 2>&1
+  END
+
+  config.vm.post_up_message = <<-END
+  ---------------------------------------------------------------
+   Web app available at: http://127.0.0.1:8080
+  ---------------------------------------------------------------
+  END
+
+end
