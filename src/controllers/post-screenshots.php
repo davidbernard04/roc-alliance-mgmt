@@ -38,7 +38,7 @@ function HandlePost()
     }
 
     if (count($aFiles) > 0) {
-        $aAll = array();
+        $aMembers = array();
         $bufferToForceBrowserToDisplay = str_repeat(" ", 4096); // some browser wait to display despite having receiving data.
 
         foreach ($aFiles as $szFilename) {
@@ -47,24 +47,15 @@ function HandlePost()
 
             $res = $ocrHelper->CropImage($szFilename);
 
-            if ($res != -1) {
-                $aPart = $ocrHelper->ExtractFromImage($szFilename, isset($g_UPLOAD_DIR));
-            }
+            if ($res !== -1) {
+                $aMembers = $ocrHelper->ExtractFromImage($szFilename, isset($g_UPLOAD_DIR));
 
-            if ($aPart !== -1) {
-                // Append and magically ignore duplicates
-                // TODO: This does not support uploading screenshots from differente date (since array indexed by position). Need an index by date.
-                $aAll += $aPart;
+                if ($aMembers !== -1) {
+                    $g_sqlModel->InsertMembers('Québec Kingdóm', $aMembers);
+                }
             }
         }
 
-        // Sort by array key (i.e. position)
-        ksort(/*INOUT*/$aAll, SORT_NUMERIC);
-
-        // Insert in database;
-        $g_sqlModel->InsertMembers('Québec Kingdóm', $aAll);
-
-        echo "<br><pre>" . serialize($aAll) . "</pre>";
         echo "<br>\nDone!";
     }
 }
