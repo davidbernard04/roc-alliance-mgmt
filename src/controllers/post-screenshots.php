@@ -49,6 +49,7 @@ function HandlePost()
 
             if ($res !== -1) {
                 $aMembers = $ocrHelper->ExtractFromImage($szFilename, isset($g_UPLOAD_DIR));
+                // echo "<pre>" . print_r($aMembers, true) . "</pre>\n";
 
                 if ($aMembers !== -1) {
                     $g_sqlModel->InsertMembers('Québec Kingdóm', $aMembers);
