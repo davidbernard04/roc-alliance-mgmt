@@ -2,6 +2,8 @@
 
 require_once __DIR__ . '/../../composer/vendor/autoload.php';
 
+include_once __DIR__ . '/../utils/CPhoneSizeHelper.php';
+
 use thiagoalessio\TesseractOCR\TesseractOCR;
 use PNGMetadata\PNGMetadata;
 
@@ -30,19 +32,21 @@ class CImageOcrHelper
             return -1;
         }
 
-        // Screen name
-        $im2 = imagecrop($im, ['x' => 14, 'y' => 27, 'width' => 89, 'height' => 19]);
-        // Convert to monochrome image.
-        imagefilter($im2, IMG_FILTER_GRAYSCALE);
-        imagefilter($im2, IMG_FILTER_BRIGHTNESS, 10);
-        imagefilter($im2, IMG_FILTER_CONTRAST, -255); 
-        if ($im2 !== FALSE) {
-            if (file_exists("$szFilename-screen.png")) {
-                unlink("$szFilename-screen.png");
-            }
-            imagepng($im2, "$szFilename-screen.png");
-            imagedestroy($im2);
-        }
+        $sizeHelper = new CPhoneSizeHelper(imagesx($im), imagesy($im));
+
+        // // Screen name
+        // $im2 = imagecrop($im, ['x' => 14, 'y' => 27, 'width' => 89, 'height' => 19]);
+        // // Convert to monochrome image.
+        // imagefilter($im2, IMG_FILTER_GRAYSCALE);
+        // imagefilter($im2, IMG_FILTER_BRIGHTNESS, 10);
+        // imagefilter($im2, IMG_FILTER_CONTRAST, -255); 
+        // if ($im2 !== FALSE) {
+        //     if (file_exists("$szFilename-screen.png")) {
+        //         unlink("$szFilename-screen.png");
+        //     }
+        //     imagepng($im2, "$szFilename-screen.png");
+        //     imagedestroy($im2);
+        // }
 
         // Better rendering if we increase contrast, which increase text and reduce graphics.
         imagefilter($im, IMG_FILTER_GRAYSCALE);
@@ -54,10 +58,8 @@ class CImageOcrHelper
         }
         imagepng($im, "$szFilename-filtered.png");
 
-        // TODO: Coordinates are hardcoded for an iPhone 7
-        
         // Names
-        $im2 = imagecrop($im, ['x' => 442, 'y' => 214, 'width' => 200, 'height' => 520]);
+        $im2 = imagecrop($im, $sizeHelper->GetNamesCoordinates());
         if ($im2 !== FALSE) {
             if (file_exists("$szFilename-names.png")) {
                 unlink("$szFilename-names.png");
@@ -67,7 +69,7 @@ class CImageOcrHelper
         }
         
         // Points
-        $im2 = imagecrop($im, ['x' => 778, 'y' => 214, 'width' => 80, 'height' => 520]);
+        $im2 = imagecrop($im, $sizeHelper->GetPointsCoordinates());
         if ($im2 !== FALSE) {
             if (file_exists("$szFilename-pts.png")) {
                 unlink("$szFilename-pts.png");
@@ -86,26 +88,26 @@ class CImageOcrHelper
         $createdDateGroup = $this->GetReferenceDate($szCreatedDate);
         $szScreenType = false;
 
-        // First look if it's a supported screenshot type.
-        $aScreenName = $this->OCR("$szFilename-screen.png", 6, false);
-        if (array_search("ALLIANCE", $aScreenName) !== false) {
-            $szScreenType = "Alliance Ranking";
-        } elseif (
-            array_search("HUNT", $aScreenName) !== false ||
-            array_search("CLASSEMENT", $aScreenName) !== false
-        ) {
-            $szScreenType = "Treasure Hunt Ranking";
-        } else {
-            echo "-> Error, cannot find Alliance or Treasure Hunt ranking.\n<br>";
-            echo "--> RAW output is " . print_r($aScreenName, true) . "\n<br>";
-            return -1;
-        }
+        // // First look if it's a supported screenshot type.
+        // $aScreenName = $this->OCR("$szFilename-screen.png", 6, false);
+        // if (array_search("ALLIANCE", $aScreenName) !== false) {
+        //     $szScreenType = "Alliance Ranking";
+        // } elseif (
+        //     array_search("HUNT", $aScreenName) !== false ||
+        //     array_search("CLASSEMENT", $aScreenName) !== false
+        // ) {
+        //     $szScreenType = "Treasure Hunt Ranking";
+        // } else {
+        //     echo "-> Error, cannot find Alliance or Treasure Hunt ranking.\n<br>";
+        //     echo "--> RAW output is " . print_r($aScreenName, true) . "\n<br>";
+        //     return -1;
+        // }
 
-        //TODO: Support TH.
-        if ($szScreenType == "Treasure Hunt Ranking") {
-            echo "-> Treasure Hunt ranking are not yet supported. Skipping.\n<br>";
-            return -1;
-        }
+        // //TODO: Support TH.
+        // if ($szScreenType == "Treasure Hunt Ranking") {
+        //     echo "-> Treasure Hunt ranking are not yet supported. Skipping.\n<br>";
+        //     return -1;
+        // }
 
         $aNames = $this->OCR("$szFilename-names.png", 4, false);
         $aPoints = $this->OCR("$szFilename-pts.png", 4, true);
@@ -183,8 +185,15 @@ class CImageOcrHelper
             $dateTimeOriginal = $png_metadata->get('exif:DateTimeOriginal');
         } else {
             $exif_metadata = exif_read_data($szFilename);
-            $dateTimeOriginal = $exif_metadata['DateTimeOriginal'];
-        } 
+            if (isset($exif_metadata['DateTimeOriginal'])) {
+                $dateTimeOriginal = $exif_metadata['DateTimeOriginal'];
+            }
+        }
+
+        // Debug
+        if ($dateTimeOriginal == "") {
+            echo "Notice: Image does not contain any date/time metadata.<br>\n";
+        }
 
         return $dateTimeOriginal;
     }
