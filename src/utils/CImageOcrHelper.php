@@ -154,12 +154,14 @@ class CImageOcrHelper
 
         $blob = (new TesseractOCR($szFilename))
             ->psm($uPsm)
+            ->threadLimit(1) // Multi-threading is broken in Tesseract 4.x
             ->allowlist($aNumbersOnly)
             ->configFile('tesseract.ini')
             ->run();
 
         // $blob = (new TesseractOCR($szFilename))
         //     ->psm($uPsm)
+        //     ->threadLimit(1)
         //     ->tessdataDir('./tessdata/')
         //     ->lang('fra')
         //     ->allowlist($aNumbersOnly)
