@@ -13,8 +13,10 @@ $twig = new \Twig\Environment($loader, array(
 
 date_default_timezone_set('UTC');
 
+$szAllianceName = ''; // TODO add a global config for the alliance name, to be used also in upload-form.twig.
+
 // Get dates and members from database.
-$aAll = (new CMemberPointsModel)->GetLatestDates('Québec Kingdóm');
+$aAll = (new CMemberPointsModel)->GetLatestDates($szAllianceName, 7);
 $AllDiff = ComputeMembersProgression($aAll);
 
 // Render HTML

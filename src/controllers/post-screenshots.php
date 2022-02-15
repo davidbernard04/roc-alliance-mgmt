@@ -52,7 +52,8 @@ function HandlePost()
                 // echo "<pre>" . print_r($aMembers, true) . "</pre>\n";
 
                 if ($aMembers !== -1) {
-                    $g_sqlModel->InsertMembers('Québec Kingdóm', $aMembers);
+                    $szAllianceName = isset($_POST['alliance_name']) ? $_POST['alliance_name'] : '';
+                    $g_sqlModel->InsertMembers($szAllianceName, $aMembers);
                 }
             }
         }
