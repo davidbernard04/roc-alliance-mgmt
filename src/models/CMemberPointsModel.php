@@ -14,7 +14,7 @@ class CMemberPointsModel
         chmod($this->m_szPath, 0664); // make sure we can write inside afterwards.
 
         $this->m_pDb->exec('CREATE TABLE IF NOT EXISTS member_points(
-            id INTEGER PRIMARY KEY, alliance_id TEXT, name_id TEXT, fullname TEXT, mp_points INT, mp_real_datetime TEXT, mp_time_group INT,
+            id INTEGER PRIMARY KEY, alliance_id TEXT, name_id TEXT, fullname TEXT, mp_points INT, mp_real_datetime TEXT, mp_time_group INT, mp_timestamp INT,
             UNIQUE(name_id, mp_time_group) ON CONFLICT REPLACE)');
     }
 
@@ -27,8 +27,8 @@ class CMemberPointsModel
     public function InsertMembers($szAllianceId, $aMembers)
     {
         // Prepare the query for faster batch insert.
-        $sqlStatement = $this->m_pDb->prepare('INSERT INTO member_points (alliance_id, name_id, fullname, mp_points, mp_real_datetime, mp_time_group) 
-                                                VALUES (:alliance_id, :name_id, :fullname, :mp_points, :mp_real_datetime, :mp_time_group)');
+        $sqlStatement = $this->m_pDb->prepare('INSERT INTO member_points (alliance_id, name_id, fullname, mp_points, mp_real_datetime, mp_time_group, mp_timestamp) 
+                                                VALUES (:alliance_id, :name_id, :fullname, :mp_points, :mp_real_datetime, :mp_time_group, :mp_timestamp)');
 
         $this->m_pDb->exec('BEGIN');
         foreach ($aMembers as $m)
@@ -39,6 +39,7 @@ class CMemberPointsModel
             $sqlStatement->bindValue(':mp_points', $m['pts'], SQLITE3_INTEGER);
             $sqlStatement->bindValue(':mp_real_datetime', $m['date'], SQLITE3_TEXT);
             $sqlStatement->bindValue(':mp_time_group', $m['time_group'], SQLITE3_INTEGER);
+            $sqlStatement->bindValue(':mp_timestamp', $m['timestamp'], SQLITE3_INTEGER);
             $res = $sqlStatement->execute();
             $sqlStatement->reset();
         }
@@ -55,16 +56,16 @@ class CMemberPointsModel
      *             [Name3] => 3910
      *         )
      */
-    public function GetLatestDates($szAllianceId)
+    public function GetLatestDates($szAllianceId, $uMaxDates)
     {
         $aDates = array();
         $aFull = array();
-        $u_NB_DATES_MAX = 5;
 
         // First get latest time groups.
         $sqlStatement = $this->m_pDb->prepare('SELECT mp_time_group FROM member_points WHERE alliance_id = :alliance_id' .
-            " GROUP BY mp_time_group ORDER BY mp_time_group DESC LIMIT $u_NB_DATES_MAX");
+            " GROUP BY mp_time_group ORDER BY mp_time_group DESC LIMIT :limit");
         $sqlStatement->bindValue(':alliance_id', $szAllianceId, SQLITE3_TEXT);
+        $sqlStatement->bindValue(':limit', $uMaxDates, SQLITE3_INTEGER);
         $res = $sqlStatement->execute();
 
         while ($row = $res->fetchArray(SQLITE3_NUM)) {

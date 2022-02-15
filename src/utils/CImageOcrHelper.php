@@ -85,7 +85,8 @@ class CImageOcrHelper
     {
         // Extract date from PNG file exif.
         $szCreatedDate = $this->GetImageCreationDate($szFilename);
-        $createdDateGroup = $this->GetReferenceDate($szCreatedDate);
+        $datetimeCreated = new DateTime($szCreatedDate); // or today if no exif date
+
         $szScreenType = false;
 
         // // First look if it's a supported screenshot type.
@@ -137,7 +138,8 @@ class CImageOcrHelper
                 'name_id' => $szNameId,
                 'pts' => $aPoints[$i],
                 'date' => $szCreatedDate,
-                'time_group' => $createdDateGroup
+                'timestamp' => $datetimeCreated->format('U'),
+                'time_group' => $this->GetReferenceDate($datetimeCreated)
             );
         }
         return $aComplete;
@@ -203,9 +205,8 @@ class CImageOcrHelper
     /**
      * Return only the date (no time) in unix timestamp.
      */
-    private function GetReferenceDate($szDateTime)
+    private function GetReferenceDate($dateTime)
     {
-        $dateTime = new DateTime($szDateTime);
         $dateOnly = new DateTime($dateTime->format('Y-m-d'));
         return $dateOnly->format('U');
     }
