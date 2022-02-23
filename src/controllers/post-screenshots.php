@@ -11,8 +11,8 @@ require_once __DIR__ . '/../../composer/vendor/autoload.php';
 include 'models/CMemberPointsModel.php';
 include 'utils/CImageOcrHelper.php';
 
-// Comment out to cleanup intermediate images.
-$g_UPLOAD_DIR = 'writable/uploads';
+// Keep intermediate images (if not commented out).
+//$g_UPLOAD_DIR = 'writable/uploads';
 
 $g_sqlModel = new CMemberPointsModel;
 
