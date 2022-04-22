@@ -110,15 +110,8 @@ class CImageOcrHelper
         //     return -1;
         // }
 
-        $aNames = $this->OCR("$szFilename-names.png", 4, false);
+        $aNamesDirty = $this->OCR("$szFilename-names.png", 4, false);
         $aPoints = $this->OCR("$szFilename-pts.png", 4, true);
-
-        //TODO: Hardcoded for iPhone7 screenshots with 6 players visible.
-        if (count($aPoints) != 6 || count($aNames) < 11) {
-            echo "Error, did not found 6 players for " . $szFilename . "\n<br>";
-            echo "-> RAW data: " . print_r($aNames, true) . "<br>\n";
-            return -1;
-        }
 
         if (!$bDebugKeepWorkImages) {
             unlink($szFilename);
@@ -127,14 +120,28 @@ class CImageOcrHelper
             unlink("$szFilename-filtered.png");
         }
 
+        // Remove junks from names array.
+        foreach ($aNamesDirty as $szName) {
+            // Names require at least 4 characters.
+            if (strlen($szName) >= 4) {
+                $aNames[] = $szName;
+            }
+        }
+
+        // Sanity checkup.
+        if (count($aPoints) != count($aNames) || count($aNames) > 6) {
+            echo "Error, names vs points mismatch for " . $szFilename . "\n<br>";
+            echo "-> Names RAW data: " . print_r($aNames, true) . "<br>\n";
+            echo "-> Points RAW data: " . print_r($aPoints, true) . "<br>\n";
+            return -1;
+        }
+
         // Build array indexed by position.
         $aComplete = array();
-        $uStartingIndexForNames = (count($aNames) == 12 ? 1 : 0);
         for ($i = 0; $i < count($aPoints); $i++) {
-            $szName = $aNames[$i + (1 * $i) + $uStartingIndexForNames]; // complex algo because names have junks in-between.
-            $szNameId = preg_replace('/[^A-Za-z0-9#]/', '', $szName); // keep only alpha-numeric chars, except the #.
+            $szNameId = preg_replace('/[^A-Za-z0-9#]/', '', $aNames[$i]); // keep only alpha-numeric chars, except the #.
             $aComplete[] = array(
-                'fullname' => $szName,
+                'fullname' => $aNames[$i],
                 'name_id' => $szNameId,
                 'pts' => $aPoints[$i],
                 'date' => $szCreatedDate,
