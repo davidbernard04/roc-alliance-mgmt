@@ -15,6 +15,8 @@ Open a terminal in the **roc-alliance-mgmt/vagrant** directory, and launch:
 vagrant up
 ```
 
+Might take some time since this downloads a complete Ubuntu virtual machine.
+
 Once completed, you are ready to upload screenshots at this address:
 - http://127.0.0.1:8080/
 

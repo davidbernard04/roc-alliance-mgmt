@@ -1,6 +1,8 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+HTTP_PORT = 8080
+
 # Synced folder inside the VM
 LOCAL_PC_PATH = ".."
 MOUNTED_VM_PATH = "/var/www/roc-alliance-mgmt"
@@ -12,7 +14,7 @@ Vagrant.configure("2") do |config|
   config.vm.hostname = "ubuntu-vagrant"
 
   # Forward HTTP port.
-  config.vm.network "forwarded_port", guest: 80, host: 8080, host_ip: "0.0.0.0"
+  config.vm.network "forwarded_port", guest: 80, host: HTTP_PORT, host_ip: "0.0.0.0"
 
   # Prevent vagrant asking everytime by specifying the interface on you PC, for example:
   #config.vm.network "public_network", bridge: "eth0"
@@ -53,7 +55,7 @@ Vagrant.configure("2") do |config|
 
   config.vm.post_up_message = <<-END
   ---------------------------------------------------------------
-   Web app available at: http://127.0.0.1:8080
+   Web app available at: http://127.0.0.1:#{HTTP_PORT}
   ---------------------------------------------------------------
   END
 
